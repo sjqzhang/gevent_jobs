@@ -188,11 +188,9 @@ class JobQueue(object):
             i.join()
 
     def start(self):
-
         if self.thread_mode=='thread':
             self._start_thread()
         else:
-            print('xx')
             self._start_gevent()
 
     def pause(self):
