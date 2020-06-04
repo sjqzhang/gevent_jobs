@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 __author__ = 'xiaozhang'
-import socket, sys
 try:
     from queue import Queue
 except Exception as er:
     from Queue import Queue
-import  re
 import time
 import uuid
 from enum import Enum
@@ -64,20 +62,24 @@ class JobQueue(object):
         RUNNING=1
         STOP=2
         PAUSE=3
-    def __init__(self,load_job_func=None,worker_count=10,queue_size=100000,thread_tpye='gevent'):
+    def __init__(self,load_job_func=None,worker_count=10,queue_size=100000,thread_mode='gevent'):
         self.status=self.Status.INIT
         self.job_queue=Queue(queue_size)
         self.job_queue_error=Queue(queue_size)
         self.job_queue_success=Queue(queue_size)
         self.worker_count=worker_count
         self.load_job_func=load_job_func
-        self.thread_tpye=thread_tpye
+        self.thread_mode=thread_mode
 
-    def add_job(self,job):
+    def _add_job(self,job):
+        if not hasattr(job, 'do'):
+            logger.error('job must be implements do function')
+            return False
         self.job_queue.put(job)
+        return True
 
     def put(self,job):
-        self.job_queue.put(job)
+        return self._add_job(job)
 
     def _load_job(self):
         while True:
@@ -86,7 +88,8 @@ class JobQueue(object):
                     jobs=self.load_job_func(self)
                     if jobs!=None and isinstance(jobs,list):
                         for job in jobs:
-                            self.add_job(jobs)
+                            if self._add_job(jobs):
+                                logger.info('add job fail')
                 time.sleep(1)
             except Exception as er:
                 logger.error(er)
@@ -95,7 +98,10 @@ class JobQueue(object):
         while True:
             try:
                 job=self.job_queue_success.get()
-                job.success()
+                if hasattr(job, 'success') and callable(job.success):
+                    job.success()
+                else:
+                    logger.info('please implements success funcion')
                 time.sleep(0.001)
             except Exception as er:
                 logger.error(er)
@@ -103,7 +109,10 @@ class JobQueue(object):
         while True:
             try:
                 job=self.job_queue_error.get()
-                job.error()
+                if hasattr(job, 'error') and callable(job.error):
+                    job.error()
+                else:
+                    logger.info('please implements error funcion')
                 time.sleep(0.001)
             except Exception as er:
                 logger.error(er)
@@ -118,12 +127,13 @@ class JobQueue(object):
                     break
                 job=self.job_queue.get()
                 if not hasattr(job,'do'):
-                    print('job must be implements do function')
+                    logger.error('job must be implements do function')
                     continue
                 try:
                     result=job.do()
                     job.job_status=JobStatus.Finish
                 except Exception as er:
+                    logger.error(er)
                     job.job_status = JobStatus.Fail
                     result=False
                 if result==None or result:
@@ -178,9 +188,11 @@ class JobQueue(object):
             i.join()
 
     def start(self):
-        if self.thread_tpye=='thread':
+
+        if self.thread_mode=='thread':
             self._start_thread()
         else:
+            print('xx')
             self._start_gevent()
 
     def pause(self):
@@ -188,4 +200,3 @@ class JobQueue(object):
 
     def stop(self):
         self.status=self.Status.STOP
-
