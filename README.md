@@ -8,6 +8,9 @@ pip  install -U gevent_jobs
 ### how to use?
 
 ```python
+#import Job,JobQueue (导入 Job,JobQueue)
+from gevent_jobs import Job,JobQueue
+
 # define your job , must be implements `do` func ,return bool  (定义你的任务，必须实现 do 方法，返回 bool 类型)
 class MyJob(Job):
     def do(self):
@@ -31,6 +34,15 @@ def load(queue):
             job=MyJob()
             queue.put(job)
         time.sleep(60)
+
+
+## JobQueue(load_job_func=None,worker_count=10,queue_size=100000,thread_tpye='gevent') 
+'''
+load_job_func 加载任务函数，用户自定义，在加载函数中最好用 while True阻塞
+worker_count 工作的协（线）程数量
+queue_size 队列大小
+thread_tpye 线程模型 gevent|thread
+'''
 
 jobQueue=JobQueue(load_job_func=load)
 jobQueue.start()
