@@ -135,22 +135,27 @@ class JobQueue(object):
                 logger.error(er)
 
     def _start_gevent(self):
-        from gevent import monkey
-        monkey.patch_all()
-        import gevent
-        def nohup():
-            while True:
-                time.sleep(100)
-        self.status=self.Status.RUNNING
-        workers=[]
-        workers.append(gevent.spawn(nohup))
-        time.sleep(0.02)
-        workers.append(gevent.spawn(self.do_success))
-        workers.append(gevent.spawn(self._load_job))
-        workers.append(gevent.spawn(self.do_error))
-        for i in range(1,self.worker_count):
-            workers.append(gevent.spawn(self.do))
-        gevent.joinall(workers)
+        try:
+            from gevent import monkey
+            monkey.patch_all()
+            import gevent
+            def nohup():
+                while True:
+                    time.sleep(100)
+            self.status=self.Status.RUNNING
+            workers=[]
+            workers.append(gevent.spawn(nohup))
+            time.sleep(0.02)
+            workers.append(gevent.spawn(self.do_success))
+            workers.append(gevent.spawn(self._load_job))
+            workers.append(gevent.spawn(self.do_error))
+            for i in range(1,self.worker_count):
+                workers.append(gevent.spawn(self.do))
+            gevent.joinall(workers)
+        except Exception as er:
+            logger.info('using threading mode')
+            logger.error(er)
+            self._start_thread()
 
     def _start_thread(self):
         import threading
