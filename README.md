@@ -8,6 +8,7 @@ pip  install -U gevent_jobs
 ### how to use?
 
 ```python
+# define your job , must be implements `do` func ,return bool  (定义你的任务，必须实现 do 方法，返回 bool 类型)
 class MyJob(Job):
     def do(self):
         self.data=self.job_id
@@ -18,7 +19,6 @@ class MyJob(Job):
         print(self.data)
 
 # load_job second/per（每秒种加载一次任务）
-
 def load(queue):
     job=MyJob()
     queue.put(job)
