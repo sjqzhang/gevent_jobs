@@ -7,7 +7,6 @@ except Exception as er:
     from Queue import Queue
 import time
 import uuid
-from enum import Enum
 import logging
 import threading
 
@@ -15,7 +14,7 @@ import threading
 
 logger = logging.getLogger('JobQueue')
 
-class JobStatus(Enum):
+class JobStatus(object):
     Unkown='unkown'
     Success='success'
     Fail='fail'
@@ -62,7 +61,7 @@ class JobQueue(object):
         RUNNING=1
         STOP=2
         PAUSE=3
-    def __init__(self,load_job_func=None,worker_count=10,queue_size=100000,thread_mode='gevent'):
+    def __init__(self,load_job_func=None,load_job_interval=1,worker_count=10,queue_size=100000,thread_mode='gevent'):
         self.status=self.Status.INIT
         self.job_queue=Queue(queue_size)
         self.job_queue_error=Queue(queue_size)
@@ -70,6 +69,7 @@ class JobQueue(object):
         self.worker_count=worker_count
         self.load_job_func=load_job_func
         self.thread_mode=thread_mode
+        self.load_job_interval=load_job_interval
 
     def _add_job(self,job):
         if not hasattr(job, 'do'):
@@ -90,7 +90,7 @@ class JobQueue(object):
                         for job in jobs:
                             if self._add_job(jobs):
                                 logger.info('add job fail')
-                time.sleep(1)
+                time.sleep(self.load_job_interval)
             except Exception as er:
                 logger.error(er)
 
@@ -198,3 +198,4 @@ class JobQueue(object):
 
     def stop(self):
         self.status=self.Status.STOP
+

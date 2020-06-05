@@ -22,13 +22,13 @@ class MyJob(Job):
     def error(self):
         print(self.data)
 
-# load_job second/per（每秒种加载一次任务）
-def load(queue):
+#  方式一、 load_job second/per（每秒种加载一次任务）
+def load_job(queue):
     job=MyJob()
     queue.put(job)
     
-# load_job custom interval (recommend) (自定义加载任务间隔【推荐】)
-def load(queue):
+# 方式二、 load_job custom interval (recommend) (自定义加载任务间隔【推荐】)
+def load_job(queue):
     import time
     while True:
         for i in range(1,100):
@@ -37,14 +37,21 @@ def load(queue):
         time.sleep(60)
 
 
-## JobQueue(load_job_func=None,worker_count=10,queue_size=100000,thread_mode='gevent') 
+## JobQueue(load_job_func=None,load_job_interval=1,worker_count=10,queue_size=100000,thread_mode='gevent') 
 '''
 load_job_func 加载任务函数，用户自定义，在加载函数中最好用 while True阻塞
+load_job_interval 加载任时间间隔，默认1s
 worker_count 工作的协（线）程数量
 queue_size 队列大小
 thread_mode 线程模型 gevent|thread
 '''
 
-jobQueue=JobQueue(load_job_func=load)
+jobQueue=JobQueue(load_job_func=load_job)
 jobQueue.start()
+```
+
+
+### how gevent_jobs compatibility?
+```angular2html
+python2.6+
 ```
