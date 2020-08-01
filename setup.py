@@ -12,7 +12,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "gevent_jobs",
-    version = "0.0.5",
+    version = "0.0.6",
     keywords = ("pip","gevent jobs"),
     description = "gevent jobs",
     long_description = "gevent jobs",
