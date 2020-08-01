@@ -23,10 +23,10 @@ class JobStatus(object):
     Finish='finish'
 
 class Job(object):
-    def __init__(self):
-        self.data=None
-        self.input=None
-        self.output=None
+    def __init__(self,data=None,input=None,output=None):
+        self.data=data
+        self.input=input
+        self.output=output
         self.job_id=str(uuid.uuid4())
         self.job_status=JobStatus.Init
     def job_switch(self):
@@ -92,6 +92,7 @@ class JobQueue(object):
                                 logger.info('add job fail')
                 time.sleep(self.load_job_interval)
             except Exception as er:
+                print(er)
                 logger.error(er)
 
     def do_success(self):
